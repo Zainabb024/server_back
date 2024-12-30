@@ -1,0 +1,783 @@
+// build.gradle (Project level)
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:7.0.4"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10"
+    }
+}
+
+// build.gradle (App level)
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+
+android {
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.example.authapp"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.0'
+}
+
+// AndroidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.authapp">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
+        android:theme="@style/Theme.AuthApp">
+        
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".RegisterActivity" />
+        <activity android:name=".UsersActivity" />
+    </application>
+</manifest>
+
+// res/values/strings.xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Auth App</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_name">Name</string>
+    <string name="btn_login">Login</string>
+    <string name="btn_register">Register</string>
+    <string name="btn_forgot_password">Forgot Password</string>
+</resources>
+
+// res/layout/activity_main.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
+
+    <Button
+        android:id="@+id/btnGoToLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_login"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnGoToRegister"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_register"/>
+
+</LinearLayout>
+
+// res/layout/activity_login.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/etEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/hint_email"
+        android:inputType="textEmailAddress"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/hint_password"
+        android:inputType="textPassword"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_login"
+        android:layout_marginBottom="8dp"/>
+
+    <Button
+        android:id="@+id/btnForgotPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_forgot_password"/>
+
+</LinearLayout>
+
+// res/layout/activity_register.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/etName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/hint_name"
+        android:inputType="textPersonName"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/etEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/hint_email"
+        android:inputType="textEmailAddress"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/hint_password"
+        android:inputType="textPassword"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnRegister"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_register"/>
+
+</LinearLayout>
+
+// res/layout/activity_users.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerUsers"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+</LinearLayout>
+
+// MainActivity.kt
+package com.example.authapp
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        findViewById<Button>(R.id.btnGoToLogin).setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnGoToRegister).setOnClickListener {
+            startActivity(Intent(this, RegisterActivity::class.java))
+        }
+    }
+}
+
+// ApiService.kt
+package com.example.authapp
+
+import retrofit2.http.*
+
+interface ApiService {
+    @POST("api/login")
+    suspend fun login(@Body loginRequest: LoginRequest): LoginResponse
+
+    @POST("api/register")
+    suspend fun register(@Body registerRequest: RegisterRequest): RegisterResponse
+
+    @POST("api/forgot-password")
+    suspend fun forgotPassword(@Body forgotPasswordRequest: ForgotPasswordRequest): ForgotPasswordResponse
+
+    @GET("api/users")
+    suspend fun getUsers(@Header("Authorization") token: String): List<User>
+}
+
+// Models.kt
+package com.example.authapp
+
+data class LoginRequest(
+    val email: String,
+    val password: String
+)
+
+data class LoginResponse(
+    val message: String,
+    val token: String
+)
+
+data class RegisterRequest(
+    val name: String,
+    val email: String,
+    val password: String
+)
+
+data class RegisterResponse(
+    val message: String,
+    val token: String
+)
+
+data class ForgotPasswordRequest(
+    val email: String
+)
+
+data class ForgotPasswordResponse(
+    val message: String
+)
+
+data class User(
+    val id: String,
+    val name: String,
+    val email: String
+)
+
+// LoginActivity.kt
+package com.example.authapp
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+class LoginActivity : AppCompatActivity() {
+    private lateinit var apiService: ApiService
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_login)
+
+        apiService = Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:3000/") // Use your API URL
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+
+        val etEmail = findViewById<EditText>(R.id.etEmail)
+        val etPassword = findViewById<EditText>(R.id.etPassword)
+        val btnLogin = findViewById<Button>(R.id.btnLogin)
+        val btnForgotPassword = findViewById<Button>(R.id.btnForgotPassword)
+
+        btnLogin.setOnClickListener {
+            val email = etEmail.text.toString()
+            val password = etPassword.text.toString()
+
+            lifecycleScope.launch {
+                try {
+                    val response = apiService.login(LoginRequest(email, password))
+                    Toast.makeText(this@LoginActivity, response.message, Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this@LoginActivity, UsersActivity::class.java)
+                        .putExtra("token", response.token))
+                    finish()
+                } catch (e: Exception) {
+                    Toast.makeText(this@LoginActivity, "Login failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        btnForgotPassword.setOnClickListener {
+            val email = etEmail.text.toString()
+            if (email.isNotEmpty()) {
+                lifecycleScope.launch {
+                    try {
+                        val response = apiService.forgotPassword(ForgotPasswordRequest(email))
+                        Toast.makeText(this@LoginActivity, response.message, Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(this@LoginActivity, "Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                Toast.makeText(this@LoginActivity, "Please enter email", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+}
+
+// RegisterActivity.kt
+package com.example.authapp
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+class RegisterActivity : AppCompatActivity() {
+    private lateinit var apiService: ApiService
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_register)
+
+        apiService = Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:3000/") // Use your API URL
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+
+        val etName = findViewById<EditText>(R.id.etName)
+        val etEmail = findViewById<EditText>(R.id.etEmail)
+        val etPassword = findViewById<EditText>(R.id.etPassword)
+        val btnRegister = findViewById<Button>(R.id.btnRegister)
+
+        btnRegister.setOnClickListener {
+            val name = etName.text.toString()
+            val email = etEmail.text.toString()
+            val password = etPassword.text.toString()
+
+            lifecycleScope.launch {
+                try {
+                    val response = apiService.register(RegisterRequest(name, email, password))
+                    Toast.makeText(this@RegisterActivity, response.message, Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this@RegisterActivity, UsersActivity::class.java)
+                        .putExtra("token", response.token))
+                    finish()
+                } catch (e: Exception) {
+                    Toast.makeText(this@RegisterActivity, "Registration failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+}
+
+// UsersActivity.kt (Complete Version)
+package com.example.authapp
+
+import android.os.Bundle
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+class UsersActivity : AppCompatActivity() {
+    private lateinit var apiService: ApiService
+    private lateinit var recyclerView: RecyclerView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_users)
+
+        // Initialize RecyclerView
+        recyclerView = findViewById(R.id.recyclerUsers)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+
+        // Initialize Retrofit
+        apiService = Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:3000/") // Use your API URL
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+
+        // Get token from intent
+        val token = intent.getStringExtra("token") ?: ""
+
+        // Fetch users
+        fetchUsers(token)
+    }
+
+    private fun fetchUsers(token: String) {
+        lifecycleScope.launch {
+            try {
+                val users = apiService.getUsers("Bearer $token")
+                recyclerView.adapter = UsersAdapter(users)
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@UsersActivity,
+                    "Failed to load users: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+}
+
+// UsersAdapter.kt (Complete Version)
+package com.example.authapp
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+
+class UsersAdapter(private val users: List<User>) :
+    RecyclerView.Adapter<UsersAdapter.UserViewHolder>() {
+
+    class UserViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val nameTextView: TextView = view.findViewById(R.id.tvName)
+        val emailTextView: TextView = view.findViewById(R.id.tvEmail)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_user, parent, false)
+        return UserViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
+        val user = users[position]
+        holder.nameTextView.text = user.name
+        holder.emailTextView.text = user.email
+    }
+
+    override fun getItemCount() = users.size
+}
+
+// SharedPreferences Helper (Optional but useful for token storage)
+package com.example.authapp
+
+import android.content.Context
+import android.content.SharedPreferences
+
+object PrefsHelper {
+    private const val PREFS_NAME = "AuthAppPrefs"
+    private const val KEY_TOKEN = "token"
+
+    private fun getPrefs(context: Context): SharedPreferences {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
+    fun saveToken(context: Context, token: String) {
+        getPrefs(context).edit().putString(KEY_TOKEN, token).apply()
+    }
+
+    fun getToken(context: Context): String? {
+        return getPrefs(context).getString(KEY_TOKEN, null)
+    }
+
+    fun clearToken(context: Context) {
+        getPrefs(context).edit().remove(KEY_TOKEN).apply()
+    }
+}
+
+// Utils.kt (Helper functions)
+package com.example.authapp
+
+import android.content.Context
+import android.widget.Toast
+
+object Utils {
+    fun showToast(context: Context, message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
+    fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    fun isValidPassword(password: String): Boolean {
+        return password.length >= 6
+    }
+}
+
+// NetworkConfig.kt (API configuration)
+package com.example.authapp
+
+object NetworkConfig {
+    const val BASE_URL = "http://10.0.2.2:3000/"
+    
+    fun getApiService(): ApiService {
+        return Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+    }
+}
+
+// res/values/styles.xml (Additional styles)
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppEditText" parent="Widget.AppCompat.EditText">
+        <item name="android:padding">12dp</item>
+        <item name="android:background">@drawable/edit_text_background</item>
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+
+    <style name="AppButton" parent="Widget.AppCompat.Button">
+        <item name="android:padding">12dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+</resources>
+
+// res/drawable/edit_text_background.xml
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#FFFFFF"/>
+    <corners android:radius="8dp"/>
+    <stroke android:width="1dp" android:color="#CCCCCC"/>
+</shape>
+
+// res/drawable/button_background.xml
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/purple_500"/>
+    <corners android:radius="8dp"/>
+</shape>
+
+// res/values/colors.xml (Additional colors)
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="gray">#808080</color>
+</resources>
+
+
+// PrefsHelper.kt
+package com.example.authapp
+
+import android.content.Context
+import android.content.SharedPreferences
+
+object PrefsHelper {
+    private const val PREFS_NAME = "AuthAppPrefs"
+    private const val KEY_TOKEN = "token"
+    private const val KEY_USER_EMAIL = "user_email"
+    
+    private fun getPrefs(context: Context): SharedPreferences {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
+    fun saveToken(context: Context, token: String) {
+        getPrefs(context).edit().apply {
+            putString(KEY_TOKEN, token)
+            apply()
+        }
+    }
+
+    fun getToken(context: Context): String? {
+        return getPrefs(context).getString(KEY_TOKEN, null)
+    }
+
+    fun saveUserEmail(context: Context, email: String) {
+        getPrefs(context).edit().apply {
+            putString(KEY_USER_EMAIL, email)
+            apply()
+        }
+    }
+
+    fun getUserEmail(context: Context): String? {
+        return getPrefs(context).getString(KEY_USER_EMAIL, null)
+    }
+
+    fun clearAll(context: Context) {
+        getPrefs(context).edit().clear().apply()
+    }
+}
+
+// Utils.kt
+package com.example.authapp
+
+import android.content.Context
+import android.widget.Toast
+import android.text.TextUtils
+import android.util.Patterns
+
+object Utils {
+    fun showToast(context: Context, message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
+    fun showLongToast(context: Context, message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    }
+
+    fun isValidEmail(email: String): Boolean {
+        return !TextUtils.isEmpty(email) && Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    fun isValidPassword(password: String): Boolean {
+        return password.length >= 6
+    }
+
+    fun isValidName(name: String): Boolean {
+        return name.length >= 2
+    }
+
+    fun handleError(context: Context, error: Throwable) {
+        when {
+            error.message?.contains("timeout", true) == true -> {
+                showToast(context, "Connection timeout. Please try again.")
+            }
+            error.message?.contains("Unable to resolve host") == true -> {
+                showToast(context, "No internet connection. Please check your network.")
+            }
+            else -> {
+                showToast(context, "Error: ${error.message}")
+            }
+        }
+    }
+}
+
+// NetworkConfig.kt
+package com.example.authapp
+
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import java.util.concurrent.TimeUnit
+
+object NetworkConfig {
+    private const val BASE_URL = "http://10.0.2.2:3000/" // Android emulator localhost
+    private const val TIMEOUT = 30L
+
+    private val okHttpClient: OkHttpClient by lazy {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+
+        OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
+            .readTimeout(TIMEOUT, TimeUnit.SECONDS)
+            .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
+            .build()
+    }
+
+    private val retrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    val apiService: ApiService by lazy {
+        retrofit.create(ApiService::class.java)
+    }
+
+}
+
+
+    // Add this to build.gradle (app) if not already added
+    /*
+    dependencies {
+        implementation 'com.squareup.okhttp3:logging-interceptor:4.9.0'
+    }
+    */
+
+
+
+
+We have provided:
+
+Project level build.gradle ✓
+App level build.gradle ✓
+AndroidManifest.xml ✓
+Main layouts:
+
+activity_main.xml ✓
+activity_login.xml ✓
+activity_register.xml ✓
+activity_users.xml ✓
+item_user.xml ✓
+
+
+Kotlin files:
+
+MainActivity.kt ✓
+LoginActivity.kt ✓
+RegisterActivity.kt ✓
+UsersActivity.kt ✓
+ApiService.kt ✓
+Models.kt ✓
+UsersAdapter.kt ✓
+PrefsHelper.kt ✓
+Utils.kt ✓
+NetworkConfig.kt ✓
+
+
+Resource files:
+
+strings.xml ✓
+colors.xml ✓
+styles.xml ✓
+edit_text_background.xml ✓
+button_background.xml ✓
+
+
