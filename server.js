@@ -56,7 +56,7 @@ const auth = async (req, res, next) => {
   }
 };
 
-// Register Route
+// Register Route used for registering user
 app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
